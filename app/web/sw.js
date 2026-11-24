@@ -3,7 +3,9 @@ const CACHE = 'meethalfway-shell-development';
 const SHELL = [];
 const RUNTIME = 'meethalfway-ai-runtime-v1';
 self.addEventListener('install', event => event.waitUntil(
-  caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting())
+  // Bypass the HTTP cache so a new worker never stores the previous build's files.
+  caches.open(CACHE).then(cache => cache.addAll(SHELL.map(url => new Request(url, {cache: 'reload'}))))
+    .then(() => self.skipWaiting())
 ));
 self.addEventListener('activate', event => event.waitUntil(
   caches.keys().then(keys => Promise.all(keys.filter(key =>

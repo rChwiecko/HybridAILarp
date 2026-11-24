@@ -99,7 +99,8 @@ class NotificationService extends ChangeNotifier {
     if (!cloud.connected || _deviceId == null) return;
     await cloud.db.doc('users/${cloud.uid}/devices/$_deviceId').set({
       'fid': fid,
-      'platform': kIsWeb ? 'web' : defaultTargetPlatform.name,
+      // The rules accept 'android', 'ios' and 'web'; the enum name is 'iOS'.
+      'platform': kIsWeb ? 'web' : defaultTargetPlatform.name.toLowerCase(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }

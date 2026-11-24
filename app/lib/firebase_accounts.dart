@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'domain.dart';
+import 'firebase_plans.dart';
 import 'firebase_service.dart';
 import 'account_merge.dart';
 
@@ -129,21 +130,24 @@ extension FirebaseAccounts on FirebaseService {
 
   Future<void> deleteAccount(String password) async {
     await connect();
-    final remaining = await db
-        .collection('rooms')
-        .where('memberIds', arrayContains: uid)
-        .limit(1)
-        .get();
-    if (remaining.docs.isNotEmpty) {
-      throw StateError(
-        'Leave your live plans first. Transfer hosted plans or delete them before deleting your account.',
-      );
-    }
     final user = auth.currentUser!;
     if (!user.isAnonymous && user.email != null) {
       await user.reauthenticateWithCredential(
         EmailAuthProvider.credential(email: user.email!, password: password),
       );
+    }
+    // Leave every live plan, as the Leave action would. Hosted plans pass to
+    // the earliest other member; a plan nobody else joined is deleted.
+    for (final room in await rooms()) {
+      final header = (await db.doc('rooms/${room.id}').get()).data()!;
+      final others = List<String>.from(header['memberIds'] as List)
+        ..remove(uid);
+      if (room.ownerId == uid && others.isEmpty) {
+        await deletePlan(room);
+        continue;
+      }
+      if (room.ownerId == uid) await transferHost(room, others.first);
+      await removeMember(room, uid);
     }
     // Remove both sides of social relationships and pending invitations before
     // the credentials that authorize this cleanup are deleted.

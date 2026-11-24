@@ -21,6 +21,20 @@ npx firebase-tools@latest deploy --only hosting,firestore,auth,remoteconfig --pr
 Do not deploy `functions` as part of the free deployment. Billing is disabled;
 the optional push backend requires a separate owner decision.
 
+Before a web deploy:
+
+- Deploy from a checkout that has `web/firebase-config.local.json` with the web
+  app configuration and `appCheckSiteKey`. `node scripts/fetch-firebase-configs.mjs`
+  retrieves the configuration; the App Check key is preserved from an existing
+  file. `npm run build` refuses to package a build without them, because live
+  plans, accounts and AI would be silently disabled. Use
+  `python3 scripts/package-flutter-web.py --sample` only for local previews.
+- Repackaging keeps `dist/.well-known/` and `dist/downloads/` from the last
+  Android packaging, so a web-only redeploy doesn't break App Links.
+- Hosting sends `Cache-Control: no-cache` (ETag revalidation), because Flutter's
+  file names aren't content-hashed. The service worker precaches the shell and
+  the CanvasKit renderer only, and bypasses the HTTP cache when installing.
+
 ## Android
 
 Signed local files:
@@ -83,7 +97,13 @@ An unlocked, paired iPhone and an existing Apple development identity are needed
 No Android device was listed; iPhone tooling could not retrieve a usable device list during this pass. Paid Apple
 team/provisioning, App Store submission, APNs and universal-link capabilities
 remain owner-controlled. A production build should use the normal attestation
-provider instead of the development debug flag.
+provider instead of the development debug flag: build it without
+`--dart-define=APP_CHECK_DEBUG=true`, which the CI development artifact sets.
+`Runner/Distribution.entitlements` requests App Attest (production), Associated
+Domains and Push, so enable those capabilities on the paid team's App ID, and
+register the app with App Check's App Attest provider in the Firebase console.
+`Info.plist` declares standard (exempt) encryption only, so App Store Connect
+skips the export-compliance question.
 
 ## Source and remaining access
 

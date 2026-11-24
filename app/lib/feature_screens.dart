@@ -444,7 +444,7 @@ class _AccountScreenState extends State<AccountScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const Text(
-                                'First leave your live plans, transferring or deleting those you host. This permanently deletes your private cloud profile, notification registrations, and sign-in.',
+                                'You will leave your live plans. Plans you host pass to another member, or are deleted if nobody else has joined. This permanently deletes your private cloud profile, notification registrations, and sign-in.',
                               ),
                               sharedTextField(
                                 controller: controller,
