@@ -5,6 +5,7 @@ import pathlib
 import plistlib
 import shutil
 import urllib.parse
+import urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 assets = ROOT / 'app/assets'
@@ -61,7 +62,8 @@ if package_config.exists():
         if package['name'] != 'flutter_edge_ai':
             continue
         uri = urllib.parse.urljoin(package_config.as_uri(), package['rootUri'])
-        source = pathlib.Path(urllib.parse.unquote(urllib.parse.urlparse(uri).path)) / 'web'
+        # url2pathname keeps Windows drive letters (/C:/... -> C:\...).
+        source = pathlib.Path(urllib.request.url2pathname(urllib.parse.urlparse(uri).path)) / 'web'
         target = ROOT / 'app/web/edge-ai'
         target.mkdir(parents=True, exist_ok=True)
         for filename in ['cache_api.js', 'opfs_helper.js']:

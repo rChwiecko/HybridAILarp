@@ -44,6 +44,25 @@ void main() {
     await (FontLoader(
       'MaterialIcons',
     )..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'))).load();
+    // Plugins with no test implementation: no incoming links, always online.
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(
+      const MethodChannel('com.llfbandit.app_links/messages'),
+      (_) async => null,
+    );
+    messenger.setMockStreamHandler(
+      const EventChannel('com.llfbandit.app_links/events'),
+      MockStreamHandler.inline(onListen: (_, _) {}),
+    );
+    messenger.setMockMethodCallHandler(
+      const MethodChannel('dev.fluttercommunity.plus/connectivity'),
+      (_) async => ['wifi'],
+    );
+    messenger.setMockStreamHandler(
+      const EventChannel('dev.fluttercommunity.plus/connectivity_status'),
+      MockStreamHandler.inline(onListen: (_, _) {}),
+    );
   });
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
@@ -152,14 +171,14 @@ void main() {
         find.byKey(const Key('preference-note')),
         'PRIVATE_CANARY_918273',
       );
-      await tester.ensureVisible(find.text('Draft with AI'));
-      await tester.tap(find.text('Draft with AI'));
+      await tester.ensureVisible(find.text('Draft with cloud AI'));
+      await tester.tap(find.text('Draft with cloud AI'));
       await tester.pumpAndSettle();
       expect(cloud.extractions, 0);
       await tester.tap(find.text('Keep editing'));
       await tester.pumpAndSettle();
       expect(cloud.extractions, 0);
-      await tester.tap(find.text('Draft with AI'));
+      await tester.tap(find.text('Draft with cloud AI'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Send and draft'));
       await tester.pumpAndSettle();
